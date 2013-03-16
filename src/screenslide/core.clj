@@ -2,6 +2,6 @@
   (:gen-class))
 
 (defn -main
-  "I don't do a whole lot ... yet."
+  "Given a directory, perform a full screen slide-show of all images contained within."
   [& args]
   (println "Hello, World!"))

@@ -1,6 +1,6 @@
 # screenslide
 
-FIXME: description
+Quick and dirty slideshow.
 
 ## Installation
 
@@ -24,12 +24,8 @@ FIXME: listing of options this app accepts.
 
 ...
 
-### Any Other Sections
-### That You Think
-### Might be Useful
-
 ## License
 
-Copyright © 2013 FIXME
+Copyright © 2013 John Barker
 
 Distributed under the Eclipse Public License, the same as Clojure.
