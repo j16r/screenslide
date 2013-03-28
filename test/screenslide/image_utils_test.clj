@@ -1,6 +1,6 @@
-(ns screenslide.core-test
+(ns screenslide.image-utils-test
   (:use clojure.test
-        screenslide.core))
+        screenslide.image-utils))
 
 (deftest test-fit-to-viewport-small
   (testing "Supplied image is uniformly smaller than viewport"
