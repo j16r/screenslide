@@ -1,5 +1,4 @@
 (ns screenslide.core
-  (:use quil.core)
   (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
            (org.eclipse.swt.graphics Image GC)
            (org.eclipse.swt.layout FillLayout)
@@ -11,9 +10,40 @@
 (def images (ref nil))
 (def current-image (ref nil))
 
+(defn dimensions [image]
+  (let [rect (.getBounds image)]
+    [(.width rect) (.height rect)]))
+
+(defn fit-to-viewport [width height max-width max-height]
+  "Scale rectangle to fill the target rectangle without leaving any space"
+  (let [image-ratio (/ width height)
+        screen-ratio (/ max-width max-height)]
+    (if (< screen-ratio image-ratio)
+      [(* width (/ max-height height)) max-height]
+      [max-width (* height (/ max-width width))])))
+
+(defn fit-image-to-viewport [image max-width max-height]
+  (let [[width height] (dimensions image)]
+    (fit-to-viewport width height max-width max-height)))
+
+(defn scale-to-viewport [width height max-width max-height]
+  "Scale rectangle to fit within a target rectangle"
+  (let [image-ratio (/ width height)
+        screen-ratio (/ max-width max-height)]
+    (if (> screen-ratio image-ratio)
+      [(* width (/ max-height height)) max-height]
+      [max-width (* height (/ max-width width))])))
+
+(defn scale-image-to-viewport [image max-width max-height]
+    (let [[width height] (dimensions image)]
+      (scale-to-viewport width height max-width max-height)))
+
+(defn center-to-viewport [width height max-width max-height]
+  [(/ (- max-width width) 2) (/ (- max-height height) 2)])
+
 (defn load-images [path]
   (shuffle
-    (filter #(re-find #"^[^.]+\.(jpg|jpeg)$" %)
+    (filter #(re-find #"(?i)^[^.]+\.(jpg|jpeg)$" %)
       (map #(.getPath %) (file-seq (clojure.java.io/file path))))))
 
 (defn next-image []
@@ -44,7 +74,11 @@
         (handleEvent [event]
           (when-let [image @current-image]
             (println "Painting ..." image)
-            (.drawImage (.gc event) image 0 0)))))))
+            (let [[width height] (dimensions image)
+                  [new-width new-height] (fit-image-to-viewport image 1440 900)
+                  [x y] (center-to-viewport new-width new-height 1440 900)]
+              (println "Image scaled from " width height " to " new-width new-height)
+              (.drawImage (.gc event) image 0 0 width height x y new-width new-height))))))))
 
 (defn swt-loop [display shell canvas]
   (loop []
@@ -71,7 +105,7 @@
     (.setSize shell 700 700)
     (.open shell)
 
-    (interval display 3000
+    (interval display 1000
       (println "Timer!")
       (.redraw canvas)
       (try
