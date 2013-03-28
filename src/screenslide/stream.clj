@@ -21,7 +21,7 @@
   (try
     (when-let [image (next-image)]
       (println "Loading image: " image)
-      (dosync (ref-set current-images [(Image. display image)])))
+      (dosync (commute current-images #(conj (rest %) (Image. display image)))))
     (catch org.eclipse.swt.SWTException e
       (println "EXCEPTION!" e))))
 
