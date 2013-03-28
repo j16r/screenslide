@@ -1,15 +1,11 @@
 (ns screenslide.core
-  (:use screenslide.util)
+  (:use screenslide.util
+        screenslide.stream)
   (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
            (org.eclipse.swt.graphics Image GC)
            (org.eclipse.swt.layout FillLayout)
            (org.eclipse.swt.events ShellAdapter))
   (:gen-class))
-
-(defn present? [val] (not (nil? val)))
-
-(def images (ref nil))
-(def current-image (ref nil))
 
 (defn dimensions [image]
   (let [rect (.getBounds image)]
@@ -41,16 +37,6 @@
 
 (defn center-to-viewport [width height max-width max-height]
   [(/ (- max-width width) 2) (/ (- max-height height) 2)])
-
-(defn load-images [path]
-  (shuffle
-    (filter #(re-find #"(?i)^[^.]+\.(jpg|jpeg)$" %)
-      (map #(.getPath %) (file-seq (clojure.java.io/file path))))))
-
-(defn next-image []
-  (let [image (first @images)]
-    (dosync (commute images rest))
-    image))
 
 (defn create-shell [display shell canvas]
   (doto shell
@@ -113,5 +99,8 @@
 (defn -main
   "Given a directory, perform a slide-show of all images contained within."
   [& args]
-  (dosync (ref-set images (load-images (first args)))
-  (begin)))
+  (if-let [path (first args)]
+    (do
+      (load-images path)
+      (begin))
+    (println "Please specify a source directory.")))
