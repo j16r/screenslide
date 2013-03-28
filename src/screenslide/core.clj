@@ -29,13 +29,7 @@
       org.eclipse.swt.SWT/Paint
       (proxy [Listener][]
         (handleEvent [event]
-          (when-let [image (first @current-images)]
-            (println "Painting ..." image)
-            (let [[width height] (dimensions image)
-                  [new-width new-height] (fit-image-to-viewport image 1440 900)
-                  [x y] (center-to-viewport new-width new-height 1440 900)]
-              (println "Image scaled from " width height " to " new-width new-height)
-              (.drawImage (.gc event) image 0 0 width height x y new-width new-height))))))))
+          (draw-slideshow shell (.gc event)))))))
 
 (defn swt-loop [display shell canvas]
   (loop []
@@ -61,12 +55,7 @@
     (interval display change-image-delay
       (println "Timer!")
       (.redraw canvas)
-      (try
-        (when-let [image (next-image)]
-          (println "Loading image: " image)
-          (dosync (ref-set current-images [(Image. display image)])))
-        (catch org.eclipse.swt.SWTException e
-          (println "EXCEPTION!" e))))
+      (advance-slideshow display))
 
     (swt-loop display shell canvas)))
 
