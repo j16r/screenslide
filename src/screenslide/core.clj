@@ -13,7 +13,7 @@
 
 (defn load-images [path]
   (shuffle
-    (filter #(re-find #"\.(jpg|jpeg)$" %)
+    (filter #(re-find #"^[^.]+\.(jpg|jpeg)$" %)
       (map #(.getPath %) (file-seq (clojure.java.io/file path))))))
 
 (defn next-image []
