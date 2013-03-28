@@ -53,9 +53,10 @@
     (.open shell)
 
     (interval display change-image-delay
-      (println "Timer!")
-      (.redraw canvas)
       (advance-slideshow display))
+
+    (interval display frame-delay
+      (.redraw canvas))
 
     (swt-loop display shell canvas)))
 
