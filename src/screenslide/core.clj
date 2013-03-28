@@ -1,4 +1,5 @@
 (ns screenslide.core
+  (:use screenslide.util)
   (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
            (org.eclipse.swt.graphics Image GC)
            (org.eclipse.swt.layout FillLayout)
@@ -88,14 +89,6 @@
         (if (not (.readAndDispatch display))
           (.sleep display))
         (recur)))))
-
-(defmacro interval [display timeout & body]
-  `(.timerExec ~display ~timeout
-    (proxy [Runnable][]
-      (run []
-        (do
-          ~@body
-          (.timerExec ~display ~timeout ~'this))))))
 
 (defn begin []
   (let [display (Display.)
