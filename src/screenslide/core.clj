@@ -46,6 +46,10 @@
           (.sleep display))
         (recur)))))
 
+(def fps 25)
+(def frame-delay (/ 1000 fps))
+(def change-image-delay 1000)
+
 (defn begin []
   (let [display (Display.)
         shell (Shell. display)
@@ -54,7 +58,7 @@
     (.setSize shell 700 700)
     (.open shell)
 
-    (interval display 1000
+    (interval display change-image-delay
       (println "Timer!")
       (.redraw canvas)
       (try
