@@ -1,50 +1,90 @@
 (ns screenslide.core
   (:use quil.core)
+  (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
+           (org.eclipse.swt.graphics Image GC)
+           (org.eclipse.swt.layout FillLayout)
+           (org.eclipse.swt.events ShellAdapter))
   (:gen-class))
 
 (defn present? [val] (not (nil? val)))
 
-(defn- wildcard-filter
-  "Given a regex, return a FilenameFilter that matches."
-  [regex]
-  (reify java.io.FilenameFilter
-    (accept [_ dir name] (present? (re-find regex name)))))
+(def images (ref nil))
+(def current-image (ref nil))
 
-(defn- directory-list
-  "Given a directory and a regex, return a seq of matching filenames."
-  [dir regex]
-  (map
-    #(str dir "/" %)
-    (sort
-      (.list (clojure.java.io/file dir) (wildcard-filter regex)))))
+(defn load-images [path]
+  (shuffle
+    (filter #(re-find #"\.(jpg|jpeg)$" %)
+      (map #(.getPath %) (file-seq (clojure.java.io/file path))))))
 
-(def regular-file-regex #"[^.]+[.][^.]+")
+(defn next-image []
+  (let [image (first @images)]
+    (dosync (commute images rest))
+    image))
 
-(defn load-files [path]
-  (directory-list path regular-file-regex))
+(defn create-shell [display shell canvas]
+  (doto shell
+    (.setText "Screenslide")
+    (.setLayout (FillLayout.))
+    ; Exit the app when the shell is closed
+    (.addShellListener
+      (proxy [ShellAdapter][]
+        (shellClosed [evt]
+          (System/exit 0)))))
+  (doto canvas
+    ; Close the app on keypress
+    (.addListener
+      org.eclipse.swt.SWT/KeyUp
+      (proxy [Listener][]
+        (handleEvent [event]
+          (.close shell))))
+    ; Paint the active images
+    (.addListener
+      org.eclipse.swt.SWT/Paint
+      (proxy [Listener][]
+        (handleEvent [event]
+          (when-let [image @current-image]
+            (println "Painting ..." image)
+            (.drawImage (.gc event) image 0 0)))))))
 
-(defn setup []
-  (frame-rate 1)
-  (background 200))
-
-(def images (ref ()))
-
-(defn draw []
-  (println (count @images))
-  (let [image-to-show (first @images)]
-    (if (present? image-to-show)
+(defn swt-loop [display shell canvas]
+  (loop []
+    (if (.isDisposed shell)
+      (.dispose display)
       (do
-        (image (load-image image-to-show) 0 0)
-        (dosync (alter images rest))))))
+        (if (not (.readAndDispatch display))
+          (.sleep display))
+        (recur)))))
 
-(defsketch screenslide 
-  :title "Screenslide"
-  :setup setup
-  :draw draw
-  :size [1920 1080])
+(defmacro interval [display timeout & body]
+  `(.timerExec ~display ~timeout
+    (proxy [Runnable][]
+      (run []
+        (do
+          ~@body
+          (.timerExec ~display ~timeout ~'this))))))
+
+(defn begin []
+  (let [display (Display.)
+        shell (Shell. display)
+        canvas (Canvas. shell org.eclipse.swt.SWT/NO_BACKGROUND)]
+    (create-shell display shell canvas)
+    (.setSize shell 700 700)
+    (.open shell)
+
+    (interval display 3000
+      (println "Timer!")
+      (.redraw canvas)
+      (try
+        (when-let [image (next-image)]
+          (println "Loading image: " image)
+          (dosync (ref-set current-image (Image. display image))))
+        (catch org.eclipse.swt.SWTException e
+          (println "EXCEPTION!" e))))
+
+    (swt-loop display shell canvas)))
 
 (defn -main
-  "Given a directory, perform a full screen slide-show of all images contained within."
+  "Given a directory, perform a slide-show of all images contained within."
   [& args]
-  (dosync 
-    (ref-set images (load-files (first args)))))
+  (dosync (ref-set images (load-images (first args)))
+  (begin)))
