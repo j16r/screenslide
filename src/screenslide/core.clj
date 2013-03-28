@@ -29,7 +29,7 @@
       org.eclipse.swt.SWT/Paint
       (proxy [Listener][]
         (handleEvent [event]
-          (when-let [image @current-image]
+          (when-let [image (first @current-images)]
             (println "Painting ..." image)
             (let [[width height] (dimensions image)
                   [new-width new-height] (fit-image-to-viewport image 1440 900)
@@ -64,7 +64,7 @@
       (try
         (when-let [image (next-image)]
           (println "Loading image: " image)
-          (dosync (ref-set current-image (Image. display image))))
+          (dosync (ref-set current-images [(Image. display image)])))
         (catch org.eclipse.swt.SWTException e
           (println "EXCEPTION!" e))))
 

@@ -1,7 +1,7 @@
 (ns screenslide.stream)
 
 (def images (ref nil))
-(def current-image (ref nil))
+(def current-images (ref nil))
 
 (defn image-list [path]
   (filter #(re-find #"(?i)^[^.]+\.(jpg|jpeg)$" %)
