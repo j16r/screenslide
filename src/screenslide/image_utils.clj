@@ -1,8 +1,14 @@
 (ns screenslide.image-utils)
 
-(defn dimensions [image]
+(defmulti dimensions class)
+(defmethod dimensions org.eclipse.swt.graphics.Image [image]
   (let [rect (.getBounds image)]
     [(.width rect) (.height rect)]))
+(defmethod dimensions org.eclipse.swt.widgets.Shell [image]
+  (let [rect (.getBounds image)]
+    [(.width rect) (.height rect)]))
+(defmethod dimensions org.eclipse.swt.graphics.ImageData [image-data]
+  [(.width image-data) (.height image-data)])
 
 (defn fit-to-viewport [width height max-width max-height]
   "Scale rectangle to fill the target rectangle without leaving any space"

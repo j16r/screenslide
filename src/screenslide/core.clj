@@ -3,7 +3,6 @@
         screenslide.stream
         screenslide.image-utils)
   (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
-           (org.eclipse.swt.graphics Image GC)
            (org.eclipse.swt.layout FillLayout)
            (org.eclipse.swt.events ShellAdapter))
   (:gen-class))
@@ -29,7 +28,7 @@
       org.eclipse.swt.SWT/Paint
       (proxy [Listener][]
         (handleEvent [event]
-          (draw-slideshow shell (.gc event)))))))
+          (draw-slideshow (.gc event)))))))
 
 (defn swt-loop [display shell canvas]
   (loop []
@@ -53,9 +52,10 @@
     (.open shell)
 
     (interval display change-image-delay
-      (advance-slideshow display))
+      (advance-slideshow display shell))
 
     (interval display frame-delay
+      (animate-slides)
       (.redraw canvas))
 
     (swt-loop display shell canvas)))
