@@ -6,5 +6,5 @@
                  [quil "1.6.0"]
                  [org.eclipse.swt/org.eclipse.swt.cocoa.macosx.x86_64 "3.8"]]
   :repositories [["swt-repo" "https://swt-repo.googlecode.com/svn/repo/"]]
-  :jvm-opts ["-XstartOnFirstThread"]
+  :jvm-opts ["-XstartOnFirstThread" "-Xmx512M"]
   :main screenslide.core)
