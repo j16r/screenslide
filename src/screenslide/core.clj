@@ -1,5 +1,6 @@
 (ns screenslide.core
   (:use screenslide.util
+        screenslide.slideshow
         screenslide.stream
         screenslide.image-utils)
   (:import (org.eclipse.swt.widgets Display Shell Canvas Listener)
