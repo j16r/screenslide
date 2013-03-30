@@ -56,7 +56,8 @@
       (advance-slideshow display shell))
 
     (interval display frame-delay
-      (animate-slides)
+      (advance-frame-counter)
+      ;(animate-slides)
       (.redraw canvas))
 
     (swt-loop display shell canvas)))

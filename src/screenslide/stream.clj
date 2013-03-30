@@ -17,6 +17,3 @@
   (let [image (first @images)]
     (dosync (alter images rest))
     image))
-
-(defn create-scaled-image [image-data display width height new-width new-height]
-  (Image. display (.scaledTo image-data new-width new-height)))
