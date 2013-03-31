@@ -2,7 +2,15 @@
   (:use screenslide.stream
         screenslide.util
         screenslide.image-utils)
-  (:import (org.eclipse.swt.graphics Image ImageData GC)))
+  (:import (org.eclipse.swt.graphics Image ImageData GC))
+  (:require [clj-time.core :as time]
+            [clj-time.coerce :as time-coerce]
+            [clojure.algo.generic.math-functions :as math]))
+
+(defn epoch []
+  (time-coerce/to-long (time/now)))
+(def slideshow-stated (epoch))
+(defn current-tick [] (- (epoch) slideshow-stated))
 
 (defn create-slide [image-path display shell]
   (let [image-data (ImageData. image-path)
@@ -27,13 +35,23 @@
     (catch org.eclipse.swt.SWTException e
       (println "EXCEPTION!" e))))
 
-(defn animate-slides []
-  (dosync
-    (alter
-      current-images
-      #(map (fn [image] (assoc image :alpha (min 255 (+ (:alpha image) 20)))) %))))
+(def alpha-minimum 20)
+(def alpha-maximum 255)
+
+(defn slide-alpha [tick slide-duration]
+  (int
+    (max
+      alpha-minimum
+      (min
+        alpha-maximum
+        (* 700 (math/sin
+                 (* (/ Math/PI slide-duration)
+                    (rem tick slide-duration ))))))))
 
 (defn draw-slideshow [gc]
-  (doseq [{image :image x :x y :y alpha :alpha} @current-images]
-    (.setAlpha gc ^int alpha)
-    (.drawImage gc ^Image image ^int x ^int y)))
+  (let [tick (current-tick)]
+    (doseq [{image :image x :x y :y alpha :alpha} @current-images]
+      (let [alpha (slide-alpha tick 1000)]
+        (println "Tick " tick " alpha " alpha)
+        (.setAlpha gc ^int alpha)
+        (.drawImage gc ^Image image ^int x ^int y)))))
