@@ -4,7 +4,6 @@
   (:import (org.eclipse.swt.graphics Image ImageData GC)))
 
 (def images (ref nil))
-(def current-images (ref nil))
 
 (defn image-list [path]
   (filter #(re-find #"(?i)^[^.]+\.(jpg|jpeg)$" %)
@@ -17,6 +16,3 @@
   (let [image (first @images)]
     (dosync (alter images rest))
     image))
-
-(defn create-scaled-image [image-data display width height new-width new-height]
-  (Image. display (.scaledTo image-data new-width new-height)))

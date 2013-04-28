@@ -3,14 +3,10 @@
         screenslide.util
         screenslide.image-utils)
   (:import (org.eclipse.swt.graphics Image ImageData GC))
-  (:require [clj-time.core :as time]
-            [clj-time.coerce :as time-coerce]
-            [clojure.algo.generic.math-functions :as math]))
+  (:require [clojure.algo.generic.math-functions :as math]))
 
-(defn epoch []
-  (time-coerce/to-long (time/now)))
-(def slideshow-stated (epoch))
-(defn current-tick [] (- (epoch) slideshow-stated))
+(defn create-scaled-image [image-data display width height new-width new-height]
+  (Image. display (.scaledTo image-data new-width new-height)))
 
 (defn create-slide [image-path display shell]
   (let [image-data (ImageData. image-path)
@@ -18,24 +14,11 @@
         [max-width max-height] (dimensions shell)
         [new-width new-height] (fit-to-viewport width height max-width max-height)
         [x y] (center-to-viewport new-width new-height max-width max-height)]
-    (println "Creating slide " image-path)
-    {:image (create-scaled-image image-data display width height new-width new-height)
-     :x x
-     :y y
-     :width new-width
-     :height new-height
-     :alpha 0}))
+    (create-scaled-image image-data display width height new-width new-height)))
+(def get-slide
+  (memoize create-slide))
 
-(defn advance-slideshow [display shell]
-  (try
-    (when-let [image (next-image)]
-      (println "Loading image: " image)
-      (dosync
-        (alter current-images #(conj (rest %) (create-slide image display shell)))))
-    (catch org.eclipse.swt.SWTException e
-      (println "EXCEPTION!" e))))
-
-(def alpha-minimum 20)
+(def alpha-minimum 0)
 (def alpha-maximum 255)
 
 (defn slide-alpha [tick slide-duration]
@@ -47,11 +30,41 @@
         (* 700 (math/sin
                  (* (/ Math/PI slide-duration)
                     (rem tick slide-duration ))))))))
+(defn following-slide-alpha [tick slide-duration]
+  (- alpha-maximum (slide-alpha tick slide-duration)))
 
-(defn draw-slideshow [gc]
-  (let [tick (current-tick)]
-    (doseq [{image :image x :x y :y alpha :alpha} @current-images]
-      (let [alpha (slide-alpha tick 1000)]
-        (println "Tick " tick " alpha " alpha)
-        (.setAlpha gc ^int alpha)
-        (.drawImage gc ^Image image ^int x ^int y)))))
+(def transition-delay 1000)
+(def current-tick (atom 0))
+(defn next-tick []
+  (swap! current-tick inc))
+
+(defn image-at-frame [images tick]
+  (nth images (int (/ tick 25))))
+
+(defn arrange-frames [& frames]
+  (sort-by :alpha frames))
+
+(defn create-frame [tick]
+  (let [alpha-one (slide-alpha tick 25)
+        alpha-two (- alpha-maximum alpha-one)
+        slide-one (image-at-frame @images tick)
+        slide-two (image-at-frame @images (+ 1 tick))]
+    {:tick tick
+     :slides (arrange-frames
+               {:alpha alpha-one :image slide-one}
+               {:alpha alpha-two :image slide-two})}))
+(defn frame-sequence [ticks]
+  (lazy-seq
+    (cons
+      (create-frame (first ticks))
+      (frame-sequence (rest ticks)))))
+(def frames (frame-sequence (iterate inc 0)))
+(defn frame [tick] (nth frames tick))
+
+(defn draw-slideshow [gc display shell]
+  (let [tick (next-tick)
+        current-frame (frame tick)]
+    (println "Tick " tick " slides " (:slides current-frame))
+    (doseq [{image :image alpha :alpha} (:slides current-frame)]
+      (.setAlpha gc ^int alpha)
+      (.drawImage gc ^Image (get-slide image display shell) 0 0))))

@@ -29,7 +29,7 @@
       org.eclipse.swt.SWT/Paint
       (proxy [Listener][]
         (handleEvent [event]
-          (draw-slideshow (.gc event)))))))
+          (draw-slideshow (.gc event) display shell))))))
 
 (defn swt-loop [display shell canvas]
   (loop []
@@ -42,7 +42,6 @@
 
 (def fps 25)
 (def frame-delay (/ 1000 fps))
-(def change-image-delay 1000)
 
 (defn begin []
   (let [display (Display.)
@@ -52,11 +51,7 @@
     (.setSize shell 700 700)
     (.open shell)
 
-    (interval display change-image-delay
-      (advance-slideshow display shell))
-
     (interval display frame-delay
-      ;(animate-slides)
       (.redraw canvas))
 
     (swt-loop display shell canvas)))
