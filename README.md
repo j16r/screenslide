@@ -9,8 +9,8 @@ can be run like so:
 
     lein run $directory
 
-Screenslide will recursively search the specifieddirectory for images and
-present them as a full screen slideshow.
+Screenslide will recursively search the specified directory for images and
+present them as a full screen slide show.
 
 ## Bugs
 
