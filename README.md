@@ -1,28 +1,23 @@
 # screenslide
 
-Quick and dirty slideshow.
-
-## Installation
-
-Download from http://example.com/FIXME.
+Quick and dirty image slideshow using Clojure and SWT.
 
 ## Usage
 
-FIXME: explanation
+You'll need [leiningen](https://github.com/technomancy/leiningen). Screenslide
+can be run like so:
 
-    $ java -jar screenslide-0.1.0-standalone.jar [args]
+    lein run $directory
 
-## Options
+Screenslide will recursively search the specifieddirectory for images and
+present them as a full screen slideshow.
 
-FIXME: listing of options this app accepts.
+## Bugs
 
-## Examples
+The initial switch to full screen is a bit jarring, the images start displaying
+during the Mac OS X full screen transition.
 
-...
-
-### Bugs
-
-...
+This has only been tested on Mac OS X.
 
 ## License
 
