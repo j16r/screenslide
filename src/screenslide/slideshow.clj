@@ -43,17 +43,16 @@
          (* -1 (+ offset (math/pow (- offset slide-duration) 2)))))))
 
 (defn frame-index [tick]
-  (int (/ tick slide-ticks)))
+  (mod (int (/ tick slide-ticks)) (count @images)))
 
 (defn frame [tick]
   (let [alpha-one (slide-alpha tick)
-        alpha-two (- alpha-maximum alpha-one)
-        image-index (frame-index tick)]
+        alpha-two (- alpha-maximum alpha-one)]
     {:tick tick
      :slides [{:alpha alpha-one
-               :image (nth @images image-index)}
+               :image (nth @images (frame-index tick))}
               {:alpha alpha-two
-               :image (nth @images (+ 1 image-index))}]}))
+               :image (nth @images (frame-index (+ tick slide-ticks)))}]}))
 
 (def current-tick (atom 0))
 (defn next-tick []
