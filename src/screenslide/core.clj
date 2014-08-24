@@ -12,11 +12,14 @@
   (doto shell
     (.setText "Screenslide")
     (.setLayout (FillLayout.))
+    (.setFullScreen true)
+
     ; Exit the app when the shell is closed
     (.addShellListener
       (proxy [ShellAdapter][]
         (shellClosed [evt]
           (System/exit 0)))))
+
   (doto canvas
     ; Close the app on keypress
     (.addListener
@@ -24,6 +27,7 @@
       (proxy [Listener][]
         (handleEvent [event]
           (.close shell))))
+
     ; Paint the active images
     (.addListener
       org.eclipse.swt.SWT/Paint
@@ -40,18 +44,14 @@
           (.sleep display))
         (recur)))))
 
-(def fps 25)
-(def frame-delay (/ 1000 fps))
-
 (defn begin []
   (let [display (Display.)
         shell (Shell. display)
         canvas (Canvas. shell org.eclipse.swt.SWT/NO_BACKGROUND)]
     (create-shell display shell canvas)
-    (.setSize shell 700 700)
     (.open shell)
 
-    (interval display frame-delay
+    (interval display redraw-interval
       (.redraw canvas))
 
     (swt-loop display shell canvas)))
