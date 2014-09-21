@@ -6,8 +6,8 @@
 (def images (ref nil))
 
 (defn image-list [path]
-  (filter #(re-find #"(?i)^[^.]+\.(jpg|jpeg)$" %)
-    (map #(.getPath %) (file-seq (clojure.java.io/file path)))))
+  (filter #(re-find #"(?i).+\.(jpg|jpeg)$" %)
+          (map #(.getPath %) (file-seq (clojure.java.io/file path)))))
 
 (defn load-images [path]
   (dosync (ref-set images (shuffle (image-list path)))))
